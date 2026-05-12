@@ -26,7 +26,8 @@ Secondary: re-skin an existing .epub with the glamour stylesheet.`)
   .version(pkg.version)
   .argument('<input>', 'Directory of chapters, single source file, or existing .epub')
   .option('-o, --output <path>', 'Output file path (default: <input>.epub or <input>-glamoured.epub)')
-  .option('-c, --cover <path>', 'Cover image (JPG/PNG/SVG). Falls back to generated SVG if omitted.')
+  .option('-c, --cover <path>', 'Cover image (JPG/PNG/SVG). Otherwise tries OpenLibrary, then generated SVG.')
+  .option('--no-online-cover', 'Skip OpenLibrary cover lookup (always use SVG fallback if no --cover)')
   .option('-p, --preview', 'Open HTML preview before packaging', false)
   .option('--preview-port <n>', 'Preview server port', '3456')
   .option('--no-validate', 'Skip EPUB validation after packaging')
@@ -49,6 +50,7 @@ Secondary: re-skin an existing .epub with the glamour stylesheet.`)
       stripPgBoilerplate: Boolean(cmdOpts.stripPg),
       outputPath: cmdOpts.output ? path.resolve(String(cmdOpts.output)) : undefined,
       coverPath: cmdOpts.cover ? path.resolve(String(cmdOpts.cover)) : undefined,
+      onlineCoverLookup: cmdOpts.onlineCover !== false,
       verbose: Boolean(cmdOpts.verbose),
     };
 

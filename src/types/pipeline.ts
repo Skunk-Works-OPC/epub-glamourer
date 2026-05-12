@@ -17,6 +17,7 @@ export interface GlamourOptions {
   stripPgBoilerplate: boolean;
   outputPath?: string;
   coverPath?: string;
+  onlineCoverLookup: boolean;
   verbose: boolean;
 }
 
@@ -50,5 +51,6 @@ export const DEFAULT_OPTIONS: GlamourOptions = {
   validate: true,
   keepOriginalCss: false,
   stripPgBoilerplate: false,
+  onlineCoverLookup: true,
   verbose: false,
 };

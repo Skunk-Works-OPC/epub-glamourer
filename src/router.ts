@@ -10,6 +10,7 @@ import { buildOpf } from './builders/opf.js';
 import { buildNav } from './builders/nav.js';
 import { buildNcx } from './builders/ncx.js';
 import { buildCoverXhtml, buildCoverSvg } from './builders/cover.js';
+import { fetchCoverFromOpenLibrary } from './covers/openlibrary.js';
 import { mediaTypeFromExtension } from './types/epub.js';
 import type { GlamourOptions, ExtractResult } from './types/pipeline.js';
 import type { EpubPackage, ManifestItem, SpineItem } from './types/epub.js';
@@ -60,9 +61,9 @@ async function buildEpubFromExtraction(
   files.set('mimetype', buildMimetype());
   files.set('META-INF/container.xml', buildContainerXml(OPF_PATH));
 
-  // Cover image — user-provided or generated SVG fallback
+  // Cover image — priority: user-provided > OpenLibrary lookup > generated SVG
   const { filename: coverImageFilename, mediaType: coverMediaType, buffer: coverBuffer } =
-    await resolveCoverImage(opts.coverPath, metadata.title, metadata.author);
+    await resolveCoverImage(opts.coverPath, metadata.title, metadata.author, opts);
   files.set(`${OPF_DIR}/images/${coverImageFilename}`, coverBuffer);
 
   files.set(
@@ -117,15 +118,29 @@ async function buildEpubFromExtraction(
 async function resolveCoverImage(
   coverPath: string | undefined,
   title: string,
-  author: string
+  author: string,
+  opts: GlamourOptions
 ): Promise<{ filename: string; mediaType: string; buffer: Buffer }> {
+  // 1. User-provided cover wins
   if (coverPath && await fs.pathExists(coverPath)) {
     const ext = path.extname(coverPath).toLowerCase();
-    const filename = `cover${ext}`;
-    const mediaType = mediaTypeFromExtension(ext);
-    const buffer = await fs.readFile(coverPath);
-    return { filename, mediaType, buffer };
+    return {
+      filename: `cover${ext}`,
+      mediaType: mediaTypeFromExtension(ext),
+      buffer: await fs.readFile(coverPath),
+    };
   }
+
+  // 2. Try OpenLibrary lookup (unless disabled)
+  if (opts.onlineCoverLookup) {
+    const lookup = await fetchCoverFromOpenLibrary(title, author, { verbose: opts.verbose });
+    if (lookup) {
+      if (opts.verbose) process.stderr.write(`[cover] using OpenLibrary cover ${lookup.coverId}\n`);
+      return { filename: 'cover.jpg', mediaType: 'image/jpeg', buffer: lookup.buffer };
+    }
+  }
+
+  // 3. Fall back to generated SVG placeholder
   return { filename: 'cover.svg', mediaType: 'image/svg+xml', buffer: buildCoverSvg(title, author) };
 }
 

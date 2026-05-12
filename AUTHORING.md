@@ -2,6 +2,8 @@
 
 Step-by-step recipe for producing a publisher-ready EPUB with epub-glamourer. Follow this exactly and you will get the same result as `reference/model.epub`.
 
+For the **semi-auto "drop a file" workflow** where the Claude agent handles metadata and structure for you, see the [Semi-auto workflow](#semi-auto-workflow-drop-a-file-and-let-the-agent-do-the-rest) section at the end of this guide.
+
 ---
 
 ## The shape of a book project
@@ -290,3 +292,106 @@ Every EPUB produced by `epub-glamourer build` has, structurally:
 - All `id` attributes are valid XML NCNames
 
 The output passes `epubcheck` v5.1.0 with zero errors when built from a well-formed source directory.
+
+---
+
+## Semi-auto workflow — drop a file and let the agent do the rest
+
+For one-off conversions where you don't want to hand-author a `metadata.json` + chapter directory, work conversationally with the Claude agent. The agent runs the CLI, reads the extracted content, proposes metadata, fetches a cover, and builds the EPUB. You confirm or correct along the way.
+
+### Cover image priority
+
+When building a new EPUB, covers are resolved in this order:
+
+1. **`--cover <path>`** — if you provide one, it wins, no questions asked
+2. **OpenLibrary lookup** — once title + author are known, the pipeline queries `https://openlibrary.org/search.json?title=…&author=…`, finds a matching book with a `cover_i`, and downloads the large cover JPEG from `https://covers.openlibrary.org/`. No API key required.
+3. **Generated SVG** — if 1 and 2 both fail (no `--cover`, no OpenLibrary match, network down), falls back to the navy/gold SVG placeholder with the book's title and author rendered on it.
+
+Pass `--no-online-cover` to skip step 2 (useful offline or for unpublished work where you want the SVG placeholder regardless).
+
+### Chat protocol
+
+Tell the agent something like:
+
+> "Drop this and build me an EPUB: `/path/to/my-file.pdf`"
+>
+> "Make an epub out of this `.docx` file at `~/Downloads/draft.docx`. It's my own writing."
+>
+> "Convert this Project Gutenberg book to a glamoured EPUB: `~/Downloads/pg1342.txt`"
+
+The agent will then:
+
+1. **Inspect the file** — read the first portion of content, plus any metadata embedded in the file (PDF `info` dict, DOCX core props, EPUB OPF, etc.)
+2. **Propose full metadata** — title, author, language, publisher, date, rights, subject. For unknown books the agent uses its own knowledge (e.g. it knows Pride and Prejudice was written by Jane Austen in 1813). For your own drafts it'll ask you for the basics.
+3. **Confirm with you** — show you the proposed metadata. You say "yes" or "change the title to X" or "set publisher to Y."
+4. **Choose a cover strategy**:
+   - "I'll provide a cover" → you give a path, agent uses `--cover`
+   - "Try OpenLibrary" (default for known books) → agent runs without `--cover`, the pipeline auto-fetches
+   - "Generate SVG" (default for unpublished work) → agent passes `--no-online-cover`
+5. **Build** — agent runs `node dist/cli.js <input> -o <output> [options]`, watches `epubcheck` validation, reports the result.
+6. **Iterate** — if anything looks off (wrong cover, garbled chapters from PDF, weird title page), say so and the agent re-runs with adjustments.
+
+### Worked examples
+
+**Existing published book (real metadata available):**
+
+> You: "Convert `~/Downloads/austen-pride-and-prejudice.pdf` please"
+>
+> Agent: "Extracting… the PDF text shows this is *Pride and Prejudice* by Jane Austen. I'll set:
+> - title: Pride and Prejudice
+> - author: Jane Austen
+> - language: en
+> - publisher: T. Egerton, Whitehall (1813)
+> - rights: Public domain
+>
+> Cover: OpenLibrary will find a real one. OK to build?"
+>
+> You: "Yes."
+>
+> Agent: *runs CLI, reports "✓ Done! Pride-and-Prejudice.epub (1.2 MB) — Valid EPUB (epubcheck)"*
+
+**Public-domain text (Project Gutenberg):**
+
+> You: "Make an EPUB from `~/Downloads/pg11.txt`" *(Gutenberg's Alice in Wonderland)*
+>
+> Agent: "The file header identifies this as 'Alice's Adventures in Wonderland' by Lewis Carroll, from Project Gutenberg. I'll strip the PG license header/footer using `--strip-pg` and set up metadata accordingly. OpenLibrary should find the cover. OK?"
+
+**Your own draft (no external metadata):**
+
+> You: "Convert my draft at `~/writing/novel-v3.docx`"
+>
+> Agent: "This looks like an in-progress draft — no title page detected, no recognized author. I need to ask:
+> - What's the book's title?
+> - Who's the author?
+> - Language? (defaulting to English)
+> - Do you have a cover image, or should I generate the SVG placeholder?"
+
+**Random unknown PDF:**
+
+> You: "Build something from `~/Downloads/random-doc.pdf`"
+>
+> Agent: "The first page reads… *[summarises]*. The PDF has no title metadata. Looks like a technical manual on widget assembly. Should I title it 'Widget Assembly Guide' or do you have a real title? Author/publisher unknown — what should I set?"
+
+### What the agent will never silently do
+
+- Invent a publisher or copyright date for unpublished work — those stay blank or get a sensible default like "Self-published" only after you confirm.
+- Use OpenLibrary covers for *your own* unpublished work (would be wrong).
+- Skip cover entirely — every EPUB has a cover, either yours, OpenLibrary's, or the generated SVG.
+- Discard chapters silently — if the extractor produces zero chapters from a PDF, the agent will say so and ask before falling back to "one chapter containing everything."
+
+### Equivalent manual command
+
+If you want to skip the chat and run it yourself, the agent is just calling:
+
+```bash
+# Existing published book — let OpenLibrary find the cover
+node dist/cli.js ~/Downloads/some-book.pdf -o ~/Desktop/SomeBook.epub
+
+# Your own draft — generate SVG, skip OpenLibrary
+node dist/cli.js ~/writing/draft.docx --no-online-cover -c ~/writing/my-cover.jpg
+
+# Project Gutenberg text
+node dist/cli.js ~/Downloads/pg1342.txt --strip-pg
+```
+
+The chat workflow is just a wrapper that makes metadata decisions visible and reversible before they go into the EPUB.

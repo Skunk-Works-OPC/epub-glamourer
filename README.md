@@ -84,7 +84,8 @@ epub-glamour <input> [options]
   <input>                  Directory of chapters, single source file, or .epub
 
   -o, --output <path>      Output path (default: <input>.epub or <input>-glamoured.epub)
-  -c, --cover <path>       Cover image (JPG/PNG/SVG). Auto-generated SVG if omitted.
+  -c, --cover <path>       Cover image (JPG/PNG/SVG). Otherwise tries OpenLibrary, then SVG.
+      --no-online-cover    Skip OpenLibrary cover lookup (always use SVG fallback)
   -p, --preview            Open HTML preview in browser before packaging
       --preview-port <n>   Preview server port (default 3456)
       --no-validate        Skip epubcheck / structural validation
