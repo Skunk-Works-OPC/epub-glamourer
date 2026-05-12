@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:epub="http://www.idpf.org/2007/ops"
+      xml:lang="{{language}}">
+<head>
+  <meta charset="utf-8"/>
+  <title>Copyright</title>
+  <link href="{{cssPath}}" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+  <section epub:type="copyright-page">
+    <div class="copyright-page">
+      <p><em>{{title}}</em></p>
+      <p>By {{author}}</p>
+      {{#if rights}}
+      <p>{{rights}}</p>
+      {{else}}
+      <p>All rights reserved. No part of this publication may be reproduced,
+         distributed, or transmitted in any form or by any means without the
+         prior written permission of the publisher.</p>
+      {{/if}}
+      {{#if publisher}}<p>Published by {{publisher}}</p>{{/if}}
+      {{#if date}}<p>{{date}}</p>{{/if}}
+      {{#if identifier}}<p>ISBN / ID: {{identifier}}</p>{{/if}}
+    </div>
+  </section>
+</body>
+</html>

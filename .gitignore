@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.epub
+!reference/model.epub
+.DS_Store
+*.js.map
+coverage/
+~/.epub-glamourer/

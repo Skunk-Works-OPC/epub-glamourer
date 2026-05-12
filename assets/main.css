@@ -1,0 +1,387 @@
+/* epub-glamourer: main.css
+   Design tokens use CSS custom properties with explicit fallbacks for
+   older Kindle firmware that does not support custom properties.
+*/
+
+/* ── Fonts ─────────────────────────────────────────────────────────── */
+
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 400;
+  src: url('fonts/Lora-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Lora';
+  font-style: italic;
+  font-weight: 400;
+  src: url('fonts/Lora-Italic.ttf') format('truetype');
+}
+
+/* ── Design tokens ──────────────────────────────────────────────────── */
+
+:root {
+  --cream:  #faf7f2;
+  --ink:    #1c1c1e;
+  --navy:   #1e3a5f;
+  --gold:   #b8924a;
+  --sage:   #4a6741;
+  --muted:  #6b6b6b;
+  --rule:   #d4c9b8;
+  --font:   'Lora', Georgia, 'Times New Roman', serif;
+  --sans:   'Helvetica Neue', Arial, sans-serif;
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────── */
+
+* {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Body & base typography ─────────────────────────────────────────── */
+
+body {
+  background-color: var(--cream, #faf7f2);
+  color: var(--ink, #1c1c1e);
+  font-family: var(--font, 'Lora', Georgia, serif);
+  font-size: 1em;
+  line-height: 1.75;
+  text-align: justify;
+  -webkit-hyphens: auto;
+  -epub-hyphens: auto;
+  hyphens: auto;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5em 2em;
+}
+
+/* ── Headings ───────────────────────────────────────────────────────── */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font, 'Lora', Georgia, serif);
+  color: var(--navy, #1e3a5f);
+  text-align: center;
+  line-height: 1.3;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+  page-break-after: avoid;
+  -epub-page-break-after: avoid;
+}
+
+h1 { font-size: 1.8em; letter-spacing: 0.04em; }
+h2 { font-size: 1.4em; letter-spacing: 0.03em; }
+h3 { font-size: 1.2em; }
+h4 { font-size: 1.05em; }
+
+/* ── Paragraphs ─────────────────────────────────────────────────────── */
+
+p {
+  margin-top: 0;
+  margin-bottom: 0;
+  text-indent: 1.5em;
+}
+
+p:first-child,
+p.no-indent,
+h1 + p,
+h2 + p,
+h3 + p,
+h4 + p,
+blockquote p {
+  text-indent: 0;
+}
+
+p.story {
+  font-family: var(--font, 'Lora', Georgia, serif);
+  font-size: 1em;
+  text-indent: 1.5em;
+}
+
+/* ── Drop cap — first paragraph of body content ─────────────────────── */
+
+section[epub\:type="chapter"] > p:first-of-type::first-letter,
+div.chapter > p:first-of-type::first-letter,
+p.drop-cap::first-letter {
+  float: left;
+  font-size: 3.8em;
+  line-height: 0.75;
+  padding-right: 0.1em;
+  padding-top: 0.05em;
+  color: var(--gold, #b8924a);
+  font-family: var(--font, 'Lora', Georgia, serif);
+  font-weight: 400;
+}
+
+/* ── Links ──────────────────────────────────────────────────────────── */
+
+a {
+  color: var(--navy, #1e3a5f);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ── Blockquotes ────────────────────────────────────────────────────── */
+
+blockquote {
+  margin: 1.5em 2em;
+  padding-left: 1em;
+  border-left: 3px solid var(--gold, #b8924a);
+  color: var(--muted, #6b6b6b);
+  font-style: italic;
+}
+
+blockquote p {
+  text-indent: 0;
+  margin-bottom: 0.5em;
+}
+
+/* ── Lists ──────────────────────────────────────────────────────────── */
+
+ul, ol {
+  margin: 1em 0 1em 2em;
+}
+
+li {
+  margin-bottom: 0.25em;
+}
+
+/* ── Horizontal rules ───────────────────────────────────────────────── */
+
+hr {
+  border: none;
+  border-top: 1px solid var(--rule, #d4c9b8);
+  margin: 2em auto;
+  width: 50%;
+}
+
+/* ── Section dividers (ornamental) ──────────────────────────────────── */
+
+p.ornament,
+p.section-break {
+  text-align: center;
+  text-indent: 0;
+  color: var(--gold, #b8924a);
+  margin: 1.5em 0;
+  font-size: 1.1em;
+  letter-spacing: 0.3em;
+}
+
+/* ── Images & figures ───────────────────────────────────────────────── */
+
+img {
+  max-width: 85%;
+  height: auto;
+  display: block;
+  margin: 1.5em auto;
+  border: 1px solid var(--rule, #d4c9b8);
+  -webkit-box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+figure {
+  margin: 1.5em 0;
+  text-align: center;
+}
+
+figcaption {
+  font-size: 0.85em;
+  color: var(--muted, #6b6b6b);
+  font-style: italic;
+  margin-top: 0.4em;
+  text-align: center;
+}
+
+/* Cover image: fill the screen, no border decoration */
+img.cover-image {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  border: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  margin: 0 auto;
+  display: block;
+}
+
+/* ── Illustration tables (float layout for inline text+image) ────────── */
+
+table.illustration {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+table.illustration td {
+  vertical-align: top;
+  padding: 0 0.75em;
+}
+
+table.illustration td img {
+  max-width: 100%;
+  margin: 0;
+}
+
+/* ── Cover page ─────────────────────────────────────────────────────── */
+
+section[epub\:type="cover"],
+div.cover-page {
+  text-align: center;
+  padding: 0;
+  margin: 0;
+}
+
+/* ── Title page ─────────────────────────────────────────────────────── */
+
+section[epub\:type="titlepage"],
+div.title-page {
+  text-align: center;
+  padding: 4em 2em;
+  border: 2px solid var(--gold, #b8924a);
+  margin: 2em auto;
+  max-width: 480px;
+}
+
+div.title-page .ornament {
+  color: var(--gold, #b8924a);
+  font-size: 2em;
+  margin: 0.5em 0;
+  display: block;
+}
+
+div.title-page .book-title {
+  font-size: 2em;
+  color: var(--navy, #1e3a5f);
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  margin-bottom: 0.5em;
+}
+
+div.title-page .book-subtitle {
+  font-size: 1.1em;
+  color: var(--muted, #6b6b6b);
+  font-style: italic;
+  margin-bottom: 1.5em;
+}
+
+div.title-page .book-author {
+  font-size: 1.1em;
+  color: var(--navy, #1e3a5f);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1.5em;
+}
+
+div.title-page .book-publisher {
+  font-size: 0.85em;
+  color: var(--muted, #6b6b6b);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ── Copyright page ─────────────────────────────────────────────────── */
+
+section[epub\:type="copyright-page"],
+div.copyright-page {
+  font-size: 0.85em;
+  color: var(--muted, #6b6b6b);
+  line-height: 1.6;
+  padding: 2em 0;
+}
+
+div.copyright-page p {
+  text-indent: 0;
+  margin-bottom: 0.5em;
+}
+
+/* ── Table of contents ───────────────────────────────────────────────── */
+
+nav[epub\:type="toc"] ol,
+nav.toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+nav[epub\:type="toc"] li,
+nav.toc li {
+  margin-bottom: 0.4em;
+  padding: 0.15em 0;
+  border-bottom: 1px dotted var(--rule, #d4c9b8);
+}
+
+nav[epub\:type="toc"] a,
+nav.toc a {
+  color: var(--navy, #1e3a5f);
+  font-size: 0.95em;
+}
+
+/* ── Project Gutenberg boilerplate suppression ───────────────────────── */
+
+div.pgheader,
+div.pgfooter,
+.pgheader,
+.pgfooter,
+#pg-header,
+#pg-footer,
+.pg-boilerplate {
+  display: none !important;
+}
+
+/* ── Responsive breakpoints ─────────────────────────────────────────── */
+
+/* Tablet (551px – 900px) */
+@media screen and (max-width: 900px) {
+  body {
+    padding: 1.25em 1.5em;
+    font-size: 0.97em;
+  }
+
+  div.title-page {
+    padding: 3em 1.5em;
+  }
+
+  table.illustration td {
+    display: block;
+    width: 100%;
+    padding: 0.5em 0;
+  }
+}
+
+/* Mobile (≤ 550px) */
+@media screen and (max-width: 550px) {
+  body {
+    padding: 1em;
+    font-size: 0.94em;
+    text-align: left;
+  }
+
+  h1 { font-size: 1.5em; }
+  h2 { font-size: 1.25em; }
+
+  img {
+    max-width: 100%;
+  }
+
+  div.title-page {
+    padding: 2em 1em;
+    border-width: 1px;
+    max-width: 100%;
+  }
+
+  blockquote {
+    margin: 1em 0.5em;
+  }
+
+  section[epub\:type="chapter"] > p:first-of-type::first-letter,
+  div.chapter > p:first-of-type::first-letter,
+  p.drop-cap::first-letter {
+    font-size: 3em;
+  }
+}
