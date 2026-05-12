@@ -44,19 +44,21 @@
 
 /* ── Body & base typography ─────────────────────────────────────────── */
 
+/* Reading systems (Apple Books, Kindle, Kobo) own the page background, page
+   width, and outer margins. Setting any of these on <body> creates a visible
+   "card" floating inside the reader's own page chrome. We only set typography
+   here — color, font, line-height, hyphenation. */
 body {
-  background-color: var(--cream, #faf7f2);
   color: var(--ink, #1c1c1e);
   font-family: var(--font, 'Lora', Georgia, serif);
   font-size: 1em;
-  line-height: 1.75;
+  line-height: 1.6;
   text-align: justify;
   -webkit-hyphens: auto;
   -epub-hyphens: auto;
   hyphens: auto;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.5em 2em;
+  margin: 0;
+  padding: 0;
 }
 
 /* ── Headings ───────────────────────────────────────────────────────── */
@@ -335,14 +337,11 @@ div.pgfooter,
 }
 
 /* ── Responsive breakpoints ─────────────────────────────────────────── */
+/* These adjust *content-level* styling for small reading surfaces. We do NOT
+   touch body width or background — the reading system handles that. */
 
 /* Tablet (551px – 900px) */
 @media screen and (max-width: 900px) {
-  body {
-    padding: 1.25em 1.5em;
-    font-size: 0.97em;
-  }
-
   div.title-page {
     padding: 3em 1.5em;
   }
@@ -357,17 +356,13 @@ div.pgfooter,
 /* Mobile (≤ 550px) */
 @media screen and (max-width: 550px) {
   body {
-    padding: 1em;
-    font-size: 0.94em;
     text-align: left;
   }
 
   h1 { font-size: 1.5em; }
   h2 { font-size: 1.25em; }
 
-  img {
-    max-width: 100%;
-  }
+  img { max-width: 100%; }
 
   div.title-page {
     padding: 2em 1em;
