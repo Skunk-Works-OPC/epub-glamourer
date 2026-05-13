@@ -468,16 +468,14 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
 
 .ec-brand {
   margin: 0 auto 2em;
+  text-align: center;
 }
 
-.ec-wordmark {
-  font-family: Georgia, serif;
-  font-size: 2em;
-  font-weight: bold;
-  letter-spacing: 0.04em;
-  margin: 0 0 0.3em;
-  color: #22C55E;               /* --ec-emerald */
-  color: var(--ec-emerald, #22C55E);
+.ec-logo {
+  display: block;
+  margin: 0 auto 1em;
+  max-width: 60%;
+  height: auto;
 }
 
 .ec-tagline {

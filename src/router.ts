@@ -82,16 +82,6 @@ async function buildEpubFromExtraction(
   files.set(`${OPF_DIR}/title-page.xhtml`, Buffer.from(buildTitlePageXhtml(metadata), 'utf8'));
   files.set(`${OPF_DIR}/copyright.xhtml`, Buffer.from(buildCopyrightXhtml(metadata), 'utf8'));
 
-  // eStorya Classics back-matter pages (optional)
-  const editionYear = String(new Date().getFullYear());
-  const templateCtx = { author: metadata.author, year: editionYear, language: metadata.language };
-  if (opts.eStoryaClassics) {
-    files.set(`${OPF_DIR}/estorya-classics.xhtml`,
-      Buffer.from(await renderTemplate('estorya-classics.xhtml.hbs', templateCtx), 'utf8'));
-    files.set(`${OPF_DIR}/rights-attribution.xhtml`,
-      Buffer.from(await renderTemplate('rights-attribution.xhtml.hbs', templateCtx), 'utf8'));
-  }
-
   for (const chapter of chapters) {
     const withCss = injectLink(chapter.xhtmlContent, 'main.css');
     files.set(`${OPF_DIR}/${chapter.filename}`, Buffer.from(withCss, 'utf8'));
@@ -106,6 +96,18 @@ async function buildEpubFromExtraction(
   files.set(`${OPF_DIR}/main.css`, await fs.readFile(path.join(assetsDir, 'main.css')));
   files.set(`${OPF_DIR}/fonts/Lora-Regular.ttf`, await fs.readFile(path.join(assetsDir, 'fonts', 'Lora-Regular.ttf')));
   files.set(`${OPF_DIR}/fonts/Lora-Italic.ttf`, await fs.readFile(path.join(assetsDir, 'fonts', 'Lora-Italic.ttf')));
+
+  // eStorya Classics back-matter pages (optional)
+  const editionYear = String(new Date().getFullYear());
+  const templateCtx = { author: metadata.author, year: editionYear, language: metadata.language };
+  if (opts.eStoryaClassics) {
+    files.set(`${OPF_DIR}/estorya-classics.xhtml`,
+      Buffer.from(await renderTemplate('estorya-classics.xhtml.hbs', templateCtx), 'utf8'));
+    files.set(`${OPF_DIR}/rights-attribution.xhtml`,
+      Buffer.from(await renderTemplate('rights-attribution.xhtml.hbs', templateCtx), 'utf8'));
+    files.set(`${OPF_DIR}/images/estorya-classics.png`,
+      await fs.readFile(path.join(assetsDir, 'images', 'estorya-classics.png')));
+  }
 
   const allPages = [
     { id: 'cover', filename: 'cover.xhtml', title: 'Cover', epubType: 'cover' },
@@ -125,7 +127,7 @@ async function buildEpubFromExtraction(
   const ncxXml = buildNcx(allPages, metadata.title, metadata.identifier, metadata.author);
   files.set(`${OPF_DIR}/toc.ncx`, Buffer.from(ncxXml, 'utf8'));
 
-  const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType);
+  const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType, opts.eStoryaClassics);
   const spine = buildSpine(allPages, extracted.isPictureBook ?? false);
 
   const epubPackage: EpubPackage = { metadata, manifest, spine, opfPath: OPF_PATH, opfDir: OPF_DIR };
@@ -171,7 +173,8 @@ function buildManifest(
   _bodyChapters: Array<{ id: string; filename: string }>,
   images: Map<string, Buffer>,
   coverImageFilename: string,
-  coverMediaType: string
+  coverMediaType: string,
+  eStoryaClassics = false
 ): ManifestItem[] {
   // Fixed assets — always present
   const items: ManifestItem[] = [
@@ -181,6 +184,10 @@ function buildManifest(
     { id: 'ncx', href: 'toc.ncx', mediaType: 'application/x-dtbncx+xml' },
     { id: 'cover-image', href: `images/${coverImageFilename}`, mediaType: coverMediaType, properties: 'cover-image' },
   ];
+
+  if (eStoryaClassics) {
+    items.push({ id: 'estorya-classics-logo', href: 'images/estorya-classics.png', mediaType: 'image/png' });
+  }
 
   // All XHTML pages — driven by allPages so any future additions are automatic
   for (const page of allPages) {
