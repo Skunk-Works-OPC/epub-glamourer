@@ -22,13 +22,13 @@
 /* ── Design tokens ──────────────────────────────────────────────────── */
 
 :root {
-  --cream:  #faf7f2;
-  --ink:    #1c1c1e;
-  --navy:   #1e3a5f;
-  --gold:   #b8924a;
-  --sage:   #4a6741;
-  --muted:  #6b6b6b;
-  --rule:   #d4c9b8;
+  --cream:  #F2EFE6;   /* eStorya Warm Ivory  — page warm white        */
+  --ink:    #0B1220;   /* eStorya Midnight    — body text               */
+  --navy:   #0F1B2E;   /* eStorya Deep Navy   — headings, links         */
+  --gold:   #107d38;   /* eStorya Emerald     — drop caps, rules        */
+  --sage:   #4c8b5e;   /* eStorya Glow        — secondary accent        */
+  --muted:  #5a6a7a;   /* mid-tone on Deep Navy scale — captions        */
+  --rule:   #b8e6c8;   /* light Emerald tint  — subtle horizontal rules */
   --font:   'Lora', Georgia, 'Times New Roman', serif;
   --sans:   'Helvetica Neue', Arial, sans-serif;
 }
@@ -425,6 +425,164 @@ section[epub\:type="chapter"].picture-book div.fig + p {
 /* Cancel drop-cap — wrong look on centred picture-book text */
 section[epub\:type="chapter"].picture-book > p:first-of-type::first-letter,
 section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  float: none;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+/* ─── eStorya Classics back-matter pages ────────────────────────────────────
+   Styles for the eStorya Classics edition page and the Rights & Attribution
+   page. Edit freely — these are intentionally separate from the glamour
+   stylesheet so they can be rebranded without touching the main typographic
+   rules.
+
+   BRAND PALETTE — update the 5 tokens below to rebrand both pages at once:
+     --ec-midnight   #0B1220   darkest background
+     --ec-deep-navy  #0F1B2E   edition page background / rights body text
+     --ec-emerald    #22C55E   wordmark, rules, colophon accent
+     --ec-glow       #7EFFA2   tagline, secondary highlights
+     --ec-warm-ivory #F2EFE6   edition page text on dark background
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Palette token definitions — scoped to both eStorya pages */
+.ec-page,
+.ra-page {
+  --ec-midnight:   #0B1220;
+  --ec-deep-navy:  #0F1B2E;
+  --ec-emerald:    #22C55E;
+  --ec-glow:       #7EFFA2;
+  --ec-warm-ivory: #F2EFE6;
+}
+
+/* ── eStorya Classics edition page ── */
+
+.ec-page {
+  display: block;
+  text-align: left;
+  padding: 4em 2em;
+}
+
+.ec-brand {
+  margin: 0 auto 2em;
+  text-align: center;
+}
+
+.ec-logo {
+  display: block;
+  margin: 0 auto 1em;
+  max-width: 60%;
+  height: auto;
+}
+
+img.ec-logo{
+    border: none;
+    -webkit-box-shadow: 0px;
+    box-shadow: 0px;
+
+}
+
+.ec-tagline {
+  font-style: italic;
+  font-size: 1em;
+  margin: 0;
+  color: #7EFFA2;               /* --ec-glow */
+  color: var(--ec-glow, #7EFFA2);
+}
+
+.ec-rule {
+  border: none;
+  border-top: 1px solid #22C55E;   /* --ec-emerald */
+  border-top-color: var(--ec-emerald, #22C55E);
+  width: 6em;
+  margin: 2em auto;
+}
+
+.ec-body {
+  max-width: 28em;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.ec-body p {
+  font-size: 0.95em;
+  line-height: 1.7;
+  margin: 0.8em 0;
+  color: #0F1B2E;               /* --ec-deep-navy */
+  color: var(--ec-deep-navy, #0F1B2E);
+}
+
+/* No drop-cap on edition page */
+.ec-page p::first-letter {
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  float: none;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Rights & Attribution page ── */
+
+.ra-page {
+  display: block;
+  padding: 3em 2em;
+  color: #0F1B2E;               /* --ec-deep-navy */
+  color: var(--ec-deep-navy, #0F1B2E);
+}
+
+.ra-heading {
+  font-family: Georgia, serif;
+  font-size: 1.3em;
+  padding-bottom: 0.4em;
+  margin-bottom: 1.5em;
+  color: #0B1220;               /* --ec-midnight */
+  color: var(--ec-midnight, #0B1220);
+  border-bottom: 1px solid #22C55E;   /* --ec-emerald */
+  border-bottom-color: var(--ec-emerald, #22C55E);
+}
+
+.ra-body {
+  max-width: 36em;
+  margin: 0 auto;
+}
+
+.ra-body p {
+  font-size: 0.85em;
+  line-height: 1.7;
+  margin: 0.9em 0;
+  color: #0F1B2E;               /* --ec-deep-navy */
+  color: var(--ec-deep-navy, #0F1B2E);
+}
+
+.ra-rule {
+  border: none;
+  border-top: 1px solid #22C55E;   /* --ec-emerald */
+  border-top-color: var(--ec-emerald, #22C55E);
+  width: 4em;
+  margin: 2em auto;
+}
+
+.ra-colophon {
+  text-align: center;
+  max-width: 24em;
+  margin: 0 auto;
+}
+
+.ra-colophon p {
+  font-size: 0.8em;
+  line-height: 1.6;
+  margin: 0.2em 0;
+  color: #22C55E;               /* --ec-emerald */
+  color: var(--ec-emerald, #22C55E);
+}
+
+/* No drop-cap on rights page */
+.ra-page p::first-letter {
   font-size: inherit;
   font-family: inherit;
   color: inherit;

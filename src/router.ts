@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import Handlebars from 'handlebars';
 import { unpack } from './unpacker.js';
 import { pack, buildMimetype, buildContainerXml } from './packer.js';
 import { glamourFiles } from './glamourer.js';
@@ -14,6 +15,13 @@ import { fetchCoverFromOpenLibrary } from './covers/openlibrary.js';
 import { mediaTypeFromExtension } from './types/epub.js';
 import type { GlamourOptions, ExtractResult } from './types/pipeline.js';
 import type { EpubPackage, ManifestItem, SpineItem } from './types/epub.js';
+
+const TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
+
+async function renderTemplate(name: string, context: Record<string, unknown>): Promise<string> {
+  const src = await fs.readFile(path.join(TEMPLATES_DIR, name), 'utf8');
+  return Handlebars.compile(src)(context);
+}
 
 const OPF_PATH = 'OEBPS/content.opf';
 const OPF_DIR = 'OEBPS';
@@ -89,12 +97,28 @@ async function buildEpubFromExtraction(
   files.set(`${OPF_DIR}/fonts/Lora-Regular.ttf`, await fs.readFile(path.join(assetsDir, 'fonts', 'Lora-Regular.ttf')));
   files.set(`${OPF_DIR}/fonts/Lora-Italic.ttf`, await fs.readFile(path.join(assetsDir, 'fonts', 'Lora-Italic.ttf')));
 
+  // eStorya Classics back-matter pages (optional)
+  const editionYear = String(new Date().getFullYear());
+  const templateCtx = { author: metadata.author, year: editionYear, language: metadata.language };
+  if (opts.eStoryaClassics) {
+    files.set(`${OPF_DIR}/estorya-classics.xhtml`,
+      Buffer.from(await renderTemplate('estorya-classics.xhtml.hbs', templateCtx), 'utf8'));
+    files.set(`${OPF_DIR}/rights-attribution.xhtml`,
+      Buffer.from(await renderTemplate('rights-attribution.xhtml.hbs', templateCtx), 'utf8'));
+    files.set(`${OPF_DIR}/images/estorya-classics.png`,
+      await fs.readFile(path.join(assetsDir, 'images', 'estorya-classics.png')));
+  }
+
   const allPages = [
     { id: 'cover', filename: 'cover.xhtml', title: 'Cover', epubType: 'cover' },
     { id: 'title-page', filename: 'title-page.xhtml', title: 'Title Page', epubType: 'titlepage' },
     { id: 'copyright', filename: 'copyright.xhtml', title: 'Copyright', epubType: 'copyright-page' },
     { id: 'toc-nav', filename: 'toc.xhtml', title: 'Table of Contents', epubType: 'toc' },
     ...chapters.map((c) => ({ id: c.id, filename: c.filename, title: c.title, epubType: 'chapter' })),
+    ...(opts.eStoryaClassics ? [
+      { id: 'estorya-classics', filename: 'estorya-classics.xhtml', title: 'eStorya Classics Edition', epubType: 'backmatter' },
+      { id: 'rights-attribution', filename: 'rights-attribution.xhtml', title: 'Rights & Attribution', epubType: 'backmatter' },
+    ] : []),
   ];
 
   const navXhtml = buildNav(allPages, metadata.title, metadata.language, 'cover.xhtml');
@@ -103,7 +127,7 @@ async function buildEpubFromExtraction(
   const ncxXml = buildNcx(allPages, metadata.title, metadata.identifier, metadata.author);
   files.set(`${OPF_DIR}/toc.ncx`, Buffer.from(ncxXml, 'utf8'));
 
-  const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType);
+  const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType, opts.eStoryaClassics);
   const spine = buildSpine(allPages, extracted.isPictureBook ?? false);
 
   const epubPackage: EpubPackage = { metadata, manifest, spine, opfPath: OPF_PATH, opfDir: OPF_DIR };
@@ -146,27 +170,33 @@ async function resolveCoverImage(
 
 function buildManifest(
   allPages: Array<{ id: string; filename: string; epubType?: string }>,
-  bodyChapters: Array<{ id: string; filename: string }>,
+  _bodyChapters: Array<{ id: string; filename: string }>,
   images: Map<string, Buffer>,
   coverImageFilename: string,
-  coverMediaType: string
+  coverMediaType: string,
+  eStoryaClassics = false
 ): ManifestItem[] {
+  // Fixed assets — always present
   const items: ManifestItem[] = [
     { id: 'glamour-main-css', href: 'main.css', mediaType: 'text/css' },
     { id: 'glamour-font-lora-regular', href: 'fonts/Lora-Regular.ttf', mediaType: 'application/font-sfnt' },
     { id: 'glamour-font-lora-italic', href: 'fonts/Lora-Italic.ttf', mediaType: 'application/font-sfnt' },
     { id: 'ncx', href: 'toc.ncx', mediaType: 'application/x-dtbncx+xml' },
-    { id: 'toc-nav', href: 'toc.xhtml', mediaType: 'application/xhtml+xml', properties: 'nav' },
     { id: 'cover-image', href: `images/${coverImageFilename}`, mediaType: coverMediaType, properties: 'cover-image' },
-    { id: 'cover', href: 'cover.xhtml', mediaType: 'application/xhtml+xml' },
-    { id: 'title-page', href: 'title-page.xhtml', mediaType: 'application/xhtml+xml' },
-    { id: 'copyright', href: 'copyright.xhtml', mediaType: 'application/xhtml+xml' },
   ];
 
-  for (const ch of bodyChapters) {
-    items.push({ id: ch.id, href: ch.filename, mediaType: 'application/xhtml+xml' });
+  if (eStoryaClassics) {
+    items.push({ id: 'estorya-classics-logo', href: 'images/estorya-classics.png', mediaType: 'image/png' });
   }
 
+  // All XHTML pages — driven by allPages so any future additions are automatic
+  for (const page of allPages) {
+    const item: ManifestItem = { id: page.id, href: page.filename, mediaType: 'application/xhtml+xml' };
+    if (page.epubType === 'toc') item.properties = 'nav';
+    items.push(item);
+  }
+
+  // Inline images
   let imgIndex = 0;
   for (const [filename] of images) {
     if (filename === coverImageFilename) continue;
@@ -199,6 +229,7 @@ function injectLink(xhtml: string, cssHref: string): string {
 function buildTitlePageXhtml(meta: import('./types/epub.js').EpubMetadata): string {
   const e = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   return `<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:epub="http://www.idpf.org/2007/ops"
       xml:lang="${meta.language}">
@@ -225,6 +256,7 @@ function buildCopyrightXhtml(meta: import('./types/epub.js').EpubMetadata): stri
   const e = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const rights = meta.rights ?? 'All rights reserved. No part of this publication may be reproduced or transmitted in any form without prior written permission.';
   return `<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:epub="http://www.idpf.org/2007/ops"
       xml:lang="${meta.language}">
