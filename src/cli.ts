@@ -32,7 +32,8 @@ Secondary: re-skin an existing .epub with the glamour stylesheet.`)
   .option('--preview-port <n>', 'Preview server port', '3456')
   .option('--no-validate', 'Skip EPUB validation after packaging')
   .option('--keep-css', 'Re-skin only: do not suppress original stylesheets', false)
-  .option('--strip-pg', 'Re-skin only: hide Project Gutenberg boilerplate sections', false)
+  .option('--strip-pg', 'Hide Project Gutenberg boilerplate sections', false)
+  .option('--estorya-classics', 'Append eStorya Classics edition and rights pages to the EPUB', false)
   .option('-v, --verbose', 'Verbose logging', false)
   .action(async (inputArg: string, cmdOpts: Record<string, unknown>) => {
     const inputPath = path.resolve(inputArg);
@@ -48,6 +49,7 @@ Secondary: re-skin an existing .epub with the glamour stylesheet.`)
       validate: cmdOpts.validate !== false,
       keepOriginalCss: Boolean(cmdOpts.keepCss),
       stripPgBoilerplate: Boolean(cmdOpts.stripPg),
+      eStoryaClassics: Boolean(cmdOpts.estoryaClassics),
       outputPath: cmdOpts.output ? path.resolve(String(cmdOpts.output)) : undefined,
       coverPath: cmdOpts.cover ? path.resolve(String(cmdOpts.cover)) : undefined,
       onlineCoverLookup: cmdOpts.onlineCover !== false,
