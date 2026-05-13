@@ -25,8 +25,8 @@
   --cream:  #F2EFE6;   /* eStorya Warm Ivory  — page warm white        */
   --ink:    #0B1220;   /* eStorya Midnight    — body text               */
   --navy:   #0F1B2E;   /* eStorya Deep Navy   — headings, links         */
-  --gold:   #22C55E;   /* eStorya Emerald     — drop caps, rules        */
-  --sage:   #7EFFA2;   /* eStorya Glow        — secondary accent        */
+  --gold:   #107d38;   /* eStorya Emerald     — drop caps, rules        */
+  --sage:   #4c8b5e;   /* eStorya Glow        — secondary accent        */
   --muted:  #5a6a7a;   /* mid-tone on Deep Navy scale — captions        */
   --rule:   #b8e6c8;   /* light Emerald tint  — subtle horizontal rules */
   --font:   'Lora', Georgia, 'Times New Roman', serif;
@@ -462,7 +462,7 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
 
 .ec-page {
   display: block;
-  text-align: center;
+  text-align: left;
   padding: 4em 2em;
 }
 
@@ -476,6 +476,13 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
   margin: 0 auto 1em;
   max-width: 60%;
   height: auto;
+}
+
+img.ec-logo{
+    border: none;
+    -webkit-box-shadow: 0px;
+    box-shadow: 0px;
+
 }
 
 .ec-tagline {
