@@ -25,7 +25,7 @@ export function normalizeXhtml(html: string, language = 'en'): string {
     if (sanitized !== raw) $(el).attr('name', sanitized);
   });
 
-  const bodyContent = $('body').html() ?? '';
+  const bodyContent = resolveHtmlEntities(selfCloseVoids($('body').html() ?? ''));
   return buildXhtmlDocument(bodyContent, getTitle($), language);
 }
 
@@ -45,7 +45,7 @@ export function normalizeXhtmlFragment(fragment: string, title: string, language
     if (sanitized !== raw) $(el).attr('id', sanitized);
   });
 
-  const content = $('div').first().html() ?? fragment;
+  const content = resolveHtmlEntities(selfCloseVoids($('div').first().html() ?? fragment));
   return buildXhtmlDocument(content, title, language);
 }
 
@@ -67,6 +67,34 @@ ${bodyContent}
 
 function getTitle($: cheerio.CheerioAPI): string {
   return $('title').first().text().trim() || 'Untitled';
+}
+
+const HTML_NAMED_ENTITIES: Record<string, string> = {
+  nbsp: '&#160;', mdash: '&#8212;', ndash: '&#8211;',
+  lsquo: '&#8216;', rsquo: '&#8217;', ldquo: '&#8220;', rdquo: '&#8221;',
+  hellip: '&#8230;', copy: '&#169;', reg: '&#174;', trade: '&#8482;',
+  laquo: '&#171;', raquo: '&#187;', middot: '&#183;', bull: '&#8226;',
+  dagger: '&#8224;', Dagger: '&#8225;', permil: '&#8240;',
+  euro: '&#8364;', pound: '&#163;', yen: '&#165;', cent: '&#162;',
+  eacute: '&#233;', Eacute: '&#201;', agrave: '&#224;', Agrave: '&#192;',
+  egrave: '&#232;', Egrave: '&#200;', aacute: '&#225;', oacute: '&#243;',
+  ouml: '&#246;', uuml: '&#252;', auml: '&#228;', iuml: '&#239;',
+  ntilde: '&#241;', ccedil: '&#231;', szlig: '&#223;',
+};
+const XML_SAFE_ENTITIES = new Set(['amp', 'lt', 'gt', 'quot', 'apos']);
+
+function resolveHtmlEntities(html: string): string {
+  return html.replace(/&([a-zA-Z]+);/g, (match, name) => {
+    if (XML_SAFE_ENTITIES.has(name)) return match;
+    return HTML_NAMED_ENTITIES[name] ?? match;
+  });
+}
+
+function selfCloseVoids(html: string): string {
+  return html.replace(
+    /<(br|hr|img|input|meta|link|param|source|embed|wbr|area|base|col|track)((?:\s[^>]*?)?)\s*(?<!\/)>/gi,
+    '<$1$2/>',
+  );
 }
 
 export function sanitizeNcName(raw: string): string {

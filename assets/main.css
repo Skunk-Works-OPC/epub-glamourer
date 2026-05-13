@@ -380,3 +380,56 @@ div.pgfooter,
     font-size: 3em;
   }
 }
+
+/* ─── Picture book layout ───────────────────────────────────────────────────
+   Applied when the chapter section carries class="picture-book".
+   Goal: each illustration occupies a full page; the accompanying text
+   occupies the facing / next page.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Illustration: always start a fresh page, fill the viewport */
+section[epub\:type="chapter"].picture-book div.fig {
+  break-before: page;
+  -epub-page-break-before: always;
+  page-break-before: always;
+  break-after: page;
+  -epub-page-break-after: always;
+  page-break-after: always;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+section[epub\:type="chapter"].picture-book div.fig img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  max-height: 95vh;
+  width: auto;
+  height: auto;
+}
+
+/* Text page: one paragraph per page, centred, readable size */
+section[epub\:type="chapter"].picture-book div.fig + p {
+  break-before: page;
+  -epub-page-break-before: always;
+  page-break-before: always;
+  text-align: center;
+  font-size: 1.05em;
+  line-height: 1.85;
+  max-width: 28em;
+  margin: 3em auto;
+  padding: 0 1em;
+}
+
+/* Cancel drop-cap — wrong look on centred picture-book text */
+section[epub\:type="chapter"].picture-book > p:first-of-type::first-letter,
+section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  float: none;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+}

@@ -17,6 +17,7 @@ export interface GlamourOptions {
   stripPgBoilerplate: boolean;
   outputPath?: string;
   coverPath?: string;
+  onlineCoverLookup: boolean;
   verbose: boolean;
 }
 
@@ -35,6 +36,7 @@ export interface ExtractResult {
   chapters: ExtractedChapter[];
   metadata: Partial<EpubMetadata>;
   images: Map<string, Buffer>;
+  isPictureBook?: boolean;
 }
 
 export interface ValidationResult {
@@ -50,5 +52,6 @@ export const DEFAULT_OPTIONS: GlamourOptions = {
   validate: true,
   keepOriginalCss: false,
   stripPgBoilerplate: false,
+  onlineCoverLookup: true,
   verbose: false,
 };

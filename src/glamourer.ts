@@ -97,6 +97,7 @@ function stripPgBoilerplate(xhtmlContent: string): string {
     '.pg-boilerplate',
     'div[class*="pgheader"]',
     'div[class*="pgfooter"]',
+    'table:has(a.pginternal)',
   ];
 
   for (const sel of selectors) {

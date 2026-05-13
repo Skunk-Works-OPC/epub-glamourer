@@ -40,6 +40,7 @@ export async function extractDirectory(
   const allChapters: ExtractedChapter[] = [];
   const images = new Map<string, Buffer>();
   let chapterIndex = 0;
+  let isPictureBook = false;
 
   for (const filename of chapterFiles) {
     const fullPath = path.join(dirPath, filename);
@@ -74,6 +75,8 @@ export async function extractDirectory(
       images.set(imgName, imgBuf);
     }
 
+    if (result.isPictureBook) isPictureBook = true;
+
     chapterIndex++;
   }
 
@@ -88,7 +91,7 @@ export async function extractDirectory(
     }
   }
 
-  return { chapters: allChapters, metadata, images };
+  return { chapters: allChapters, metadata, images, isPictureBook };
 }
 
 export async function isDirectoryInput(inputPath: string): Promise<boolean> {
