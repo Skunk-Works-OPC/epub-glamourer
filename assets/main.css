@@ -440,23 +440,8 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
    stylesheet so they can be rebranded without touching the main typographic
    rules.
 
-   BRAND PALETTE — update the 5 tokens below to rebrand both pages at once:
-     --ec-midnight   #0B1220   darkest background
-     --ec-deep-navy  #0F1B2E   edition page background / rights body text
-     --ec-emerald    #22C55E   wordmark, rules, colophon accent
-     --ec-glow       #7EFFA2   tagline, secondary highlights
-     --ec-warm-ivory #F2EFE6   edition page text on dark background
+   All colours come from :root — no separate token block needed.
    ─────────────────────────────────────────────────────────────────────────── */
-
-/* Palette token definitions — scoped to both eStorya pages */
-.ec-page,
-.ra-page {
-  --ec-midnight:   #0B1220;
-  --ec-deep-navy:  #0F1B2E;
-  --ec-emerald:    #22C55E;
-  --ec-glow:       #7EFFA2;
-  --ec-warm-ivory: #F2EFE6;
-}
 
 /* ── eStorya Classics edition page ── */
 
@@ -468,51 +453,45 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
 
 .ec-brand {
   margin: 0 auto 2em;
-  text-align: center;
+  text-align: left;
 }
 
 .ec-logo {
   display: block;
-  margin: 0 auto 1em;
+  margin: 0;
   max-width: 60%;
   height: auto;
-}
-
-img.ec-logo{
-    border: none;
-    -webkit-box-shadow: 0px;
-    box-shadow: 0px;
-
+  border: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
 }
 
 .ec-tagline {
   font-style: italic;
   font-size: 1em;
   margin: 0;
-  color: #7EFFA2;               /* --ec-glow */
-  color: var(--ec-glow, #7EFFA2);
+  color: var(--sage, #4c8b5e);
 }
 
 .ec-rule {
   border: none;
-  border-top: 1px solid #22C55E;   /* --ec-emerald */
-  border-top-color: var(--ec-emerald, #22C55E);
+  border-top: 1px solid var(--gold, #107d38);
   width: 6em;
-  margin: 2em auto;
+  margin: 0;
 }
 
 .ec-body {
   max-width: 28em;
-  margin: 0 auto;
-  text-align: center;
+  margin: 0;
+  text-align: left;
 }
 
 .ec-body p {
   font-size: 0.95em;
   line-height: 1.7;
   margin: 0.8em 0;
-  color: #0F1B2E;               /* --ec-deep-navy */
-  color: var(--ec-deep-navy, #0F1B2E);
+  color: var(--navy, #0F1B2E);
+  text-indent: 0;
 }
 
 /* No drop-cap on edition page */
@@ -531,8 +510,7 @@ img.ec-logo{
 .ra-page {
   display: block;
   padding: 3em 2em;
-  color: #0F1B2E;               /* --ec-deep-navy */
-  color: var(--ec-deep-navy, #0F1B2E);
+  color: var(--navy, #0F1B2E);
 }
 
 .ra-heading {
@@ -540,10 +518,8 @@ img.ec-logo{
   font-size: 1.3em;
   padding-bottom: 0.4em;
   margin-bottom: 1.5em;
-  color: #0B1220;               /* --ec-midnight */
-  color: var(--ec-midnight, #0B1220);
-  border-bottom: 1px solid #22C55E;   /* --ec-emerald */
-  border-bottom-color: var(--ec-emerald, #22C55E);
+  color: var(--ink, #0B1220);
+  border-bottom: 1px solid var(--gold, #107d38);
 }
 
 .ra-body {
@@ -555,14 +531,12 @@ img.ec-logo{
   font-size: 0.85em;
   line-height: 1.7;
   margin: 0.9em 0;
-  color: #0F1B2E;               /* --ec-deep-navy */
-  color: var(--ec-deep-navy, #0F1B2E);
+  color: var(--navy, #0F1B2E);
 }
 
 .ra-rule {
   border: none;
-  border-top: 1px solid #22C55E;   /* --ec-emerald */
-  border-top-color: var(--ec-emerald, #22C55E);
+  border-top: 1px solid var(--gold, #107d38);
   width: 4em;
   margin: 2em auto;
 }
@@ -577,8 +551,7 @@ img.ec-logo{
   font-size: 0.8em;
   line-height: 1.6;
   margin: 0.2em 0;
-  color: #22C55E;               /* --ec-emerald */
-  color: var(--ec-emerald, #22C55E);
+  color: var(--gold, #107d38);
 }
 
 /* No drop-cap on rights page */
