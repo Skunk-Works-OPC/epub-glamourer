@@ -183,6 +183,7 @@ function buildXhtml(title: string, bodyHtml: string, lang: string, sectionClass?
   const xmlBody = resolveHtmlEntities(selfCloseVoids(bodyHtml));
   const classAttr = sectionClass ? ` class="${sectionClass}"` : '';
   return `<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:epub="http://www.idpf.org/2007/ops"
       xml:lang="${lang}">
