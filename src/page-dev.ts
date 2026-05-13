@@ -18,7 +18,7 @@ import * as fsNative from 'fs';
 import open from 'open';
 import * as cheerio from 'cheerio';
 import Handlebars from 'handlebars';
-import { buildCoverXhtml } from './builders/cover.js';
+import { buildCoverXhtml, buildCoverSvg } from './builders/cover.js';
 import { buildNav } from './builders/nav.js';
 import { buildMetadata } from './metadata.js';
 
@@ -108,7 +108,7 @@ const ALL_PAGES: Page[] = [
   {
     id: 'cover',
     label: 'Cover',
-    render: () => buildCoverXhtml('images/cover.jpg', SAMPLE_META.title, SAMPLE_META.language),
+    render: () => buildCoverXhtml('/cover-placeholder.svg', SAMPLE_META.title, SAMPLE_META.language),
   },
   {
     id: 'title-page',
@@ -257,8 +257,16 @@ async function main() {
 
   // Static assets (CSS, fonts, images)
   app.use('/assets', express.static(ASSETS_DIR));
-  // Serve logo and other assets/images so they resolve in the browser
+  // Serve assets/images at both /images and /page/images so relative paths
+  // inside templates resolve correctly regardless of the page route.
   app.use('/images', express.static(path.join(ASSETS_DIR, 'images')));
+  app.use('/page/images', express.static(path.join(ASSETS_DIR, 'images')));
+
+  // Generated SVG cover placeholder
+  app.get('/cover-placeholder.svg', (_req, res) => {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.send(buildCoverSvg(SAMPLE_META.title, SAMPLE_META.author));
+  });
 
   // SSE endpoint for live reload
   app.get('/sse', (req, res) => {
