@@ -120,7 +120,16 @@ Story begins…
 
 ### HTML / XHTML
 
-If you already have HTML pages, drop them in as `chapter-NNN.html`. The tool strips `<script>` and `<style>`, normalizes to XHTML5, adds missing `alt=""` on images, and wraps the body in `<section epub:type="chapter">`. If a single HTML file contains multiple `<h1>` headings, it will be split into multiple chapters.
+If you already have HTML pages, drop them in as `chapter-NNN.html`. The tool strips `<script>` and `<style>`, normalizes to XHTML5, adds missing `alt=""` on images, and wraps the body in `<section epub:type="chapter">`.
+
+**Automatic chapter splitting** — a single HTML file is split into multiple spine items when:
+
+- It contains multiple `<h1>` headings → one spine item per `<h1>`.
+- It contains only one `<h1>` (or none) **and** multiple `<h2>` elements that each have a direct child `<a id="…">` anchor — e.g. the Project Gutenberg HTML pattern `<h2><a id="chap01"></a>CHAPTER I.…</h2>`. In this case the file is split at each such `<h2>`, one spine item per chapter. Content appearing before the first matching `<h2>` (title block, PG metadata, navigation table) is discarded as preamble.
+
+The `<h2>` heading itself is included at the top of each generated chapter file so readers see the chapter title.
+
+HTML serialisation is hardened for XHTML validity: void elements (`<br>`, `<hr>`, `<img>`, etc.) are always self-closed (`<br/>`), and HTML-only named entities (`&nbsp;`, `&mdash;`, `&ldquo;`, etc.) are converted to their numeric equivalents (`&#160;`, `&#8212;`, `&#8220;`, etc.) so the output is valid XML.
 
 ### Plain text
 
@@ -356,6 +365,15 @@ The agent will then:
 >
 > Agent: "The file header identifies this as 'Alice's Adventures in Wonderland' by Lewis Carroll, from Project Gutenberg. I'll strip the PG license header/footer using `--strip-pg` and set up metadata accordingly. OpenLibrary should find the cover. OK?"
 
+For **Project Gutenberg HTML files** (`.html` downloads), the behaviour is more thorough. Because PG HTML uses `<h2><a id="chapXX">` headings, the extractor automatically:
+
+1. Splits the file into one XHTML spine item per chapter.
+2. Discards the preamble before chapter 1 (PG metadata block, the "Contents" navigation table).
+3. Builds the EPUB TOC from the chapter headings, so every chapter is linked correctly.
+4. With `--strip-pg`, also removes any PG header/footer/navigation divs that survived into the chapter files.
+
+The resulting EPUB has one file per chapter (natural page breaks), a complete TOC, and no PG boilerplate visible to the reader.
+
 **Your own draft (no external metadata):**
 
 > You: "Convert my draft at `~/writing/novel-v3.docx`"
@@ -390,8 +408,11 @@ node dist/cli.js ~/Downloads/some-book.pdf -o ~/Desktop/SomeBook.epub
 # Your own draft — generate SVG, skip OpenLibrary
 node dist/cli.js ~/writing/draft.docx --no-online-cover -c ~/writing/my-cover.jpg
 
-# Project Gutenberg text
+# Project Gutenberg text file
 node dist/cli.js ~/Downloads/pg1342.txt --strip-pg
+
+# Project Gutenberg HTML file (recommended) — auto-splits into chapters, removes PG nav table
+node dist/cli.js ~/Downloads/pg113-images.html --strip-pg
 ```
 
 The chat workflow is just a wrapper that makes metadata decisions visible and reversible before they go into the EPUB.

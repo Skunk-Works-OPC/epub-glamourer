@@ -104,7 +104,7 @@ async function buildEpubFromExtraction(
   files.set(`${OPF_DIR}/toc.ncx`, Buffer.from(ncxXml, 'utf8'));
 
   const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType);
-  const spine = buildSpine(allPages);
+  const spine = buildSpine(allPages, extracted.isPictureBook ?? false);
 
   const epubPackage: EpubPackage = { metadata, manifest, spine, opfPath: OPF_PATH, opfDir: OPF_DIR };
   const opfXml = buildOpf(epubPackage);
@@ -181,11 +181,14 @@ function buildManifest(
   return items;
 }
 
-function buildSpine(allPages: Array<{ id: string; epubType?: string }>): SpineItem[] {
-  return allPages.map((p) => ({
-    idref: p.id,
-    linear: p.epubType === 'cover' ? ('no' as const) : undefined,
-  }));
+function buildSpine(allPages: Array<{ id: string; epubType?: string }>, isPictureBook = false): SpineItem[] {
+  return allPages.map((p) => {
+    const hiddenInFlow = p.epubType === 'cover' || (isPictureBook && p.epubType === 'toc');
+    return {
+      idref: p.id,
+      linear: hiddenInFlow ? ('no' as const) : undefined,
+    };
+  });
 }
 
 function injectLink(xhtml: string, cssHref: string): string {

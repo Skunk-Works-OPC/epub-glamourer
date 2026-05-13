@@ -90,7 +90,7 @@ epub-glamour <input> [options]
       --preview-port <n>   Preview server port (default 3456)
       --no-validate        Skip epubcheck / structural validation
       --keep-css           Re-skin only: don't suppress original stylesheets
-      --strip-pg           Re-skin only: hide Project Gutenberg boilerplate
+      --strip-pg           Hide Project Gutenberg boilerplate (header, footer, navigation table)
   -v, --verbose            Verbose logging
 ```
 
@@ -137,7 +137,7 @@ epub-glamourer/
 │   ├── extractors/
 │   │   ├── directory.ts    Multi-chapter folder + metadata.json (primary)
 │   │   ├── markdown.ts     marked + YAML front matter
-│   │   ├── html.ts         cheerio normalization
+│   │   ├── html.ts         cheerio normalization; splits on H1 or H2 (anchored-ID) headings
 │   │   ├── txt.ts          Plain text → paragraph-wrapped XHTML
 │   │   ├── docx.ts         mammoth with semantic style map
 │   │   └── pdf.ts          pdf-parse text extraction

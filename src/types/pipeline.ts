@@ -36,6 +36,7 @@ export interface ExtractResult {
   chapters: ExtractedChapter[];
   metadata: Partial<EpubMetadata>;
   images: Map<string, Buffer>;
+  isPictureBook?: boolean;
 }
 
 export interface ValidationResult {
