@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import Handlebars from 'handlebars';
 import { unpack } from './unpacker.js';
 import { pack, buildMimetype, buildContainerXml } from './packer.js';
 import { glamourFiles } from './glamourer.js';
@@ -14,6 +15,13 @@ import { fetchCoverFromOpenLibrary } from './covers/openlibrary.js';
 import { mediaTypeFromExtension } from './types/epub.js';
 import type { GlamourOptions, ExtractResult } from './types/pipeline.js';
 import type { EpubPackage, ManifestItem, SpineItem } from './types/epub.js';
+
+const TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
+
+async function renderTemplate(name: string, context: Record<string, unknown>): Promise<string> {
+  const src = await fs.readFile(path.join(TEMPLATES_DIR, name), 'utf8');
+  return Handlebars.compile(src)(context);
+}
 
 const OPF_PATH = 'OEBPS/content.opf';
 const OPF_DIR = 'OEBPS';
@@ -74,6 +82,16 @@ async function buildEpubFromExtraction(
   files.set(`${OPF_DIR}/title-page.xhtml`, Buffer.from(buildTitlePageXhtml(metadata), 'utf8'));
   files.set(`${OPF_DIR}/copyright.xhtml`, Buffer.from(buildCopyrightXhtml(metadata), 'utf8'));
 
+  // eStorya Classics back-matter pages (optional)
+  const editionYear = String(new Date().getFullYear());
+  const templateCtx = { author: metadata.author, year: editionYear, language: metadata.language };
+  if (opts.eStoryaClassics) {
+    files.set(`${OPF_DIR}/estorya-classics.xhtml`,
+      Buffer.from(await renderTemplate('estorya-classics.xhtml.hbs', templateCtx), 'utf8'));
+    files.set(`${OPF_DIR}/rights-attribution.xhtml`,
+      Buffer.from(await renderTemplate('rights-attribution.xhtml.hbs', templateCtx), 'utf8'));
+  }
+
   for (const chapter of chapters) {
     const withCss = injectLink(chapter.xhtmlContent, 'main.css');
     files.set(`${OPF_DIR}/${chapter.filename}`, Buffer.from(withCss, 'utf8'));
@@ -95,6 +113,10 @@ async function buildEpubFromExtraction(
     { id: 'copyright', filename: 'copyright.xhtml', title: 'Copyright', epubType: 'copyright-page' },
     { id: 'toc-nav', filename: 'toc.xhtml', title: 'Table of Contents', epubType: 'toc' },
     ...chapters.map((c) => ({ id: c.id, filename: c.filename, title: c.title, epubType: 'chapter' })),
+    ...(opts.eStoryaClassics ? [
+      { id: 'estorya-classics', filename: 'estorya-classics.xhtml', title: 'eStorya Classics Edition', epubType: 'backmatter' },
+      { id: 'rights-attribution', filename: 'rights-attribution.xhtml', title: 'Rights & Attribution', epubType: 'backmatter' },
+    ] : []),
   ];
 
   const navXhtml = buildNav(allPages, metadata.title, metadata.language, 'cover.xhtml');
@@ -146,27 +168,28 @@ async function resolveCoverImage(
 
 function buildManifest(
   allPages: Array<{ id: string; filename: string; epubType?: string }>,
-  bodyChapters: Array<{ id: string; filename: string }>,
+  _bodyChapters: Array<{ id: string; filename: string }>,
   images: Map<string, Buffer>,
   coverImageFilename: string,
   coverMediaType: string
 ): ManifestItem[] {
+  // Fixed assets — always present
   const items: ManifestItem[] = [
     { id: 'glamour-main-css', href: 'main.css', mediaType: 'text/css' },
     { id: 'glamour-font-lora-regular', href: 'fonts/Lora-Regular.ttf', mediaType: 'application/font-sfnt' },
     { id: 'glamour-font-lora-italic', href: 'fonts/Lora-Italic.ttf', mediaType: 'application/font-sfnt' },
     { id: 'ncx', href: 'toc.ncx', mediaType: 'application/x-dtbncx+xml' },
-    { id: 'toc-nav', href: 'toc.xhtml', mediaType: 'application/xhtml+xml', properties: 'nav' },
     { id: 'cover-image', href: `images/${coverImageFilename}`, mediaType: coverMediaType, properties: 'cover-image' },
-    { id: 'cover', href: 'cover.xhtml', mediaType: 'application/xhtml+xml' },
-    { id: 'title-page', href: 'title-page.xhtml', mediaType: 'application/xhtml+xml' },
-    { id: 'copyright', href: 'copyright.xhtml', mediaType: 'application/xhtml+xml' },
   ];
 
-  for (const ch of bodyChapters) {
-    items.push({ id: ch.id, href: ch.filename, mediaType: 'application/xhtml+xml' });
+  // All XHTML pages — driven by allPages so any future additions are automatic
+  for (const page of allPages) {
+    const item: ManifestItem = { id: page.id, href: page.filename, mediaType: 'application/xhtml+xml' };
+    if (page.epubType === 'toc') item.properties = 'nav';
+    items.push(item);
   }
 
+  // Inline images
   let imgIndex = 0;
   for (const [filename] of images) {
     if (filename === coverImageFilename) continue;

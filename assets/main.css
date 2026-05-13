@@ -433,3 +433,130 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
   margin: 0;
   padding: 0;
 }
+
+/* ─── eStorya Classics back-matter pages ────────────────────────────────────
+   Styles for the eStorya Classics edition page and the Rights & Attribution
+   page. Edit freely — these are intentionally separate from the glamour
+   stylesheet so they can be rebranded without touching the main typographic
+   rules. Token names (--navy, --gold, --ink, --muted) match the palette
+   defined at the top of this file.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── eStorya Classics edition page ── */
+
+.ec-page {
+  display: block;
+  text-align: center;
+  padding: 4em 2em;
+}
+
+.ec-brand {
+  margin: 0 auto 2em;
+}
+
+.ec-wordmark {
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 2em;
+  font-weight: bold;
+  color: var(--navy, #1e3a5f);
+  letter-spacing: 0.04em;
+  margin: 0 0 0.3em;
+  text-transform: none;
+}
+
+.ec-tagline {
+  font-style: italic;
+  color: var(--gold, #b8924a);
+  font-size: 1em;
+  margin: 0;
+}
+
+.ec-rule {
+  border: none;
+  border-top: 1px solid var(--gold, #b8924a);
+  width: 6em;
+  margin: 2em auto;
+}
+
+.ec-body {
+  max-width: 28em;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.ec-body p {
+  color: var(--ink, #1c1c1e);
+  font-size: 0.95em;
+  line-height: 1.7;
+  margin: 0.8em 0;
+}
+
+/* No drop-cap on edition page */
+.ec-page p::first-letter {
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  float: none;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Rights & Attribution page ── */
+
+.ra-page {
+  display: block;
+  padding: 3em 2em;
+}
+
+.ra-heading {
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 1.3em;
+  color: var(--navy, #1e3a5f);
+  border-bottom: 1px solid var(--gold, #b8924a);
+  padding-bottom: 0.4em;
+  margin-bottom: 1.5em;
+}
+
+.ra-body {
+  max-width: 36em;
+  margin: 0 auto;
+}
+
+.ra-body p {
+  font-size: 0.85em;
+  color: var(--muted, #6b6b6b);
+  line-height: 1.7;
+  margin: 0.9em 0;
+}
+
+.ra-rule {
+  border: none;
+  border-top: 1px solid var(--gold, #b8924a);
+  width: 4em;
+  margin: 2em auto;
+}
+
+.ra-colophon {
+  text-align: center;
+  max-width: 24em;
+  margin: 0 auto;
+}
+
+.ra-colophon p {
+  font-size: 0.8em;
+  color: var(--muted, #6b6b6b);
+  line-height: 1.6;
+  margin: 0.2em 0;
+}
+
+/* No drop-cap on rights page */
+.ra-page p::first-letter {
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  float: none;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+}
