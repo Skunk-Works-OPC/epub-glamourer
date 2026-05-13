@@ -438,9 +438,25 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
    Styles for the eStorya Classics edition page and the Rights & Attribution
    page. Edit freely — these are intentionally separate from the glamour
    stylesheet so they can be rebranded without touching the main typographic
-   rules. Token names (--navy, --gold, --ink, --muted) match the palette
-   defined at the top of this file.
+   rules.
+
+   BRAND PALETTE — update the 5 tokens below to rebrand both pages at once:
+     --ec-midnight   #0B1220   darkest background
+     --ec-deep-navy  #0F1B2E   edition page background / rights body text
+     --ec-emerald    #22C55E   wordmark, rules, colophon accent
+     --ec-glow       #7EFFA2   tagline, secondary highlights
+     --ec-warm-ivory #F2EFE6   edition page text on dark background
    ─────────────────────────────────────────────────────────────────────────── */
+
+/* Palette token definitions — scoped to both eStorya pages */
+.ec-page,
+.ra-page {
+  --ec-midnight:   #0B1220;
+  --ec-deep-navy:  #0F1B2E;
+  --ec-emerald:    #22C55E;
+  --ec-glow:       #7EFFA2;
+  --ec-warm-ivory: #F2EFE6;
+}
 
 /* ── eStorya Classics edition page ── */
 
@@ -448,6 +464,11 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
   display: block;
   text-align: center;
   padding: 4em 2em;
+  min-height: 90vh;
+  background-color: #0F1B2E;   /* --ec-deep-navy */
+  background-color: var(--ec-deep-navy, #0F1B2E);
+  color: #F2EFE6;               /* --ec-warm-ivory */
+  color: var(--ec-warm-ivory, #F2EFE6);
 }
 
 .ec-brand {
@@ -455,25 +476,27 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
 }
 
 .ec-wordmark {
-  font-family: var(--font-heading, Georgia, serif);
+  font-family: Georgia, serif;
   font-size: 2em;
   font-weight: bold;
-  color: var(--navy, #1e3a5f);
   letter-spacing: 0.04em;
   margin: 0 0 0.3em;
-  text-transform: none;
+  color: #22C55E;               /* --ec-emerald */
+  color: var(--ec-emerald, #22C55E);
 }
 
 .ec-tagline {
   font-style: italic;
-  color: var(--gold, #b8924a);
   font-size: 1em;
   margin: 0;
+  color: #7EFFA2;               /* --ec-glow */
+  color: var(--ec-glow, #7EFFA2);
 }
 
 .ec-rule {
   border: none;
-  border-top: 1px solid var(--gold, #b8924a);
+  border-top: 1px solid #22C55E;   /* --ec-emerald */
+  border-top-color: var(--ec-emerald, #22C55E);
   width: 6em;
   margin: 2em auto;
 }
@@ -485,10 +508,11 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
 }
 
 .ec-body p {
-  color: var(--ink, #1c1c1e);
   font-size: 0.95em;
   line-height: 1.7;
   margin: 0.8em 0;
+  color: #F2EFE6;               /* --ec-warm-ivory */
+  color: var(--ec-warm-ivory, #F2EFE6);
 }
 
 /* No drop-cap on edition page */
@@ -507,15 +531,19 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
 .ra-page {
   display: block;
   padding: 3em 2em;
+  color: #0F1B2E;               /* --ec-deep-navy */
+  color: var(--ec-deep-navy, #0F1B2E);
 }
 
 .ra-heading {
-  font-family: var(--font-heading, Georgia, serif);
+  font-family: Georgia, serif;
   font-size: 1.3em;
-  color: var(--navy, #1e3a5f);
-  border-bottom: 1px solid var(--gold, #b8924a);
   padding-bottom: 0.4em;
   margin-bottom: 1.5em;
+  color: #0B1220;               /* --ec-midnight */
+  color: var(--ec-midnight, #0B1220);
+  border-bottom: 1px solid #22C55E;   /* --ec-emerald */
+  border-bottom-color: var(--ec-emerald, #22C55E);
 }
 
 .ra-body {
@@ -525,14 +553,16 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
 
 .ra-body p {
   font-size: 0.85em;
-  color: var(--muted, #6b6b6b);
   line-height: 1.7;
   margin: 0.9em 0;
+  color: #0F1B2E;               /* --ec-deep-navy */
+  color: var(--ec-deep-navy, #0F1B2E);
 }
 
 .ra-rule {
   border: none;
-  border-top: 1px solid var(--gold, #b8924a);
+  border-top: 1px solid #22C55E;   /* --ec-emerald */
+  border-top-color: var(--ec-emerald, #22C55E);
   width: 4em;
   margin: 2em auto;
 }
@@ -545,9 +575,10 @@ section[epub\:type="chapter"].picture-book div.fig + p::first-letter {
 
 .ra-colophon p {
   font-size: 0.8em;
-  color: var(--muted, #6b6b6b);
   line-height: 1.6;
   margin: 0.2em 0;
+  color: #22C55E;               /* --ec-emerald */
+  color: var(--ec-emerald, #22C55E);
 }
 
 /* No drop-cap on rights page */
