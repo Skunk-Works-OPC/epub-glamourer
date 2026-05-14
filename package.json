@@ -10,6 +10,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/cli.ts",
+    "preview:pages": "npm run build && node dist/page-dev.js",
     "start": "node dist/cli.js",
     "test": "jest",
     "test:integration": "jest --testPathPattern=integration",

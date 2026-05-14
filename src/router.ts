@@ -79,8 +79,20 @@ async function buildEpubFromExtraction(
     Buffer.from(buildCoverXhtml(`images/${coverImageFilename}`, metadata.title, metadata.language), 'utf8')
   );
 
-  files.set(`${OPF_DIR}/title-page.xhtml`, Buffer.from(buildTitlePageXhtml(metadata), 'utf8'));
-  files.set(`${OPF_DIR}/copyright.xhtml`, Buffer.from(buildCopyrightXhtml(metadata), 'utf8'));
+  const pageCtx = {
+    title:     metadata.title,
+    author:    metadata.author,
+    language:  metadata.language,
+    publisher: metadata.publisher ?? '',
+    date:      metadata.date ?? '',
+    rights:    metadata.rights ?? '',
+    identifier: metadata.identifier,
+    cssPath:   'main.css',
+  };
+  files.set(`${OPF_DIR}/title-page.xhtml`,
+    Buffer.from(await renderTemplate('title-page.xhtml.hbs', pageCtx), 'utf8'));
+  files.set(`${OPF_DIR}/copyright.xhtml`,
+    Buffer.from(await renderTemplate('copyright.xhtml.hbs', pageCtx), 'utf8'));
 
   for (const chapter of chapters) {
     const withCss = injectLink(chapter.xhtmlContent, 'main.css');
@@ -94,8 +106,12 @@ async function buildEpubFromExtraction(
   // Glamour assets
   const assetsDir = path.join(__dirname, '..', 'assets');
   files.set(`${OPF_DIR}/main.css`, await fs.readFile(path.join(assetsDir, 'main.css')));
-  files.set(`${OPF_DIR}/fonts/Lora-Regular.ttf`, await fs.readFile(path.join(assetsDir, 'fonts', 'Lora-Regular.ttf')));
-  files.set(`${OPF_DIR}/fonts/Lora-Italic.ttf`, await fs.readFile(path.join(assetsDir, 'fonts', 'Lora-Italic.ttf')));
+  // Pack every font that exists in assets/fonts/ so the set stays in sync with main.css
+  const fontsDir = path.join(assetsDir, 'fonts');
+  const fontFiles = (await fs.readdir(fontsDir)).filter(f => /\.(ttf|otf|woff2?)$/i.test(f));
+  for (const font of fontFiles) {
+    files.set(`${OPF_DIR}/fonts/${font}`, await fs.readFile(path.join(fontsDir, font)));
+  }
 
   // eStorya Classics back-matter pages (optional)
   const editionYear = String(new Date().getFullYear());
@@ -105,8 +121,8 @@ async function buildEpubFromExtraction(
       Buffer.from(await renderTemplate('estorya-classics.xhtml.hbs', templateCtx), 'utf8'));
     files.set(`${OPF_DIR}/rights-attribution.xhtml`,
       Buffer.from(await renderTemplate('rights-attribution.xhtml.hbs', templateCtx), 'utf8'));
-    files.set(`${OPF_DIR}/images/estorya-classics.png`,
-      await fs.readFile(path.join(assetsDir, 'images', 'estorya-classics.png')));
+    files.set(`${OPF_DIR}/images/estorya-classics.svg`,
+      await fs.readFile(path.join(assetsDir, 'images', 'estorya-classics.svg')));
   }
 
   const allPages = [
@@ -127,7 +143,7 @@ async function buildEpubFromExtraction(
   const ncxXml = buildNcx(allPages, metadata.title, metadata.identifier, metadata.author);
   files.set(`${OPF_DIR}/toc.ncx`, Buffer.from(ncxXml, 'utf8'));
 
-  const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType, opts.eStoryaClassics);
+  const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType, opts.eStoryaClassics, fontFiles);
   const spine = buildSpine(allPages, extracted.isPictureBook ?? false);
 
   const epubPackage: EpubPackage = { metadata, manifest, spine, opfPath: OPF_PATH, opfDir: OPF_DIR };
@@ -174,19 +190,29 @@ function buildManifest(
   images: Map<string, Buffer>,
   coverImageFilename: string,
   coverMediaType: string,
-  eStoryaClassics = false
+  eStoryaClassics = false,
+  fontFiles: string[] = []
 ): ManifestItem[] {
   // Fixed assets — always present
   const items: ManifestItem[] = [
     { id: 'glamour-main-css', href: 'main.css', mediaType: 'text/css' },
-    { id: 'glamour-font-lora-regular', href: 'fonts/Lora-Regular.ttf', mediaType: 'application/font-sfnt' },
-    { id: 'glamour-font-lora-italic', href: 'fonts/Lora-Italic.ttf', mediaType: 'application/font-sfnt' },
     { id: 'ncx', href: 'toc.ncx', mediaType: 'application/x-dtbncx+xml' },
     { id: 'cover-image', href: `images/${coverImageFilename}`, mediaType: coverMediaType, properties: 'cover-image' },
   ];
 
+  // Fonts — dynamically built from whatever is in assets/fonts/
+  for (const font of fontFiles) {
+    const ext = path.extname(font).toLowerCase();
+    const mediaType = ext === '.otf' ? 'application/font-sfnt'
+      : ext === '.woff' ? 'application/font-woff'
+      : ext === '.woff2' ? 'font/woff2'
+      : 'application/font-sfnt'; // ttf default
+    const id = 'glamour-font-' + font.replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]/g, '-');
+    items.push({ id, href: `fonts/${font}`, mediaType });
+  }
+
   if (eStoryaClassics) {
-    items.push({ id: 'estorya-classics-logo', href: 'images/estorya-classics.png', mediaType: 'image/png' });
+    items.push({ id: 'estorya-classics-logo', href: 'images/estorya-classics.svg', mediaType: 'image/svg+xml' });
   }
 
   // All XHTML pages — driven by allPages so any future additions are automatic
@@ -226,59 +252,6 @@ function injectLink(xhtml: string, cssHref: string): string {
   return xhtml.replace('</head>', `  <link href="${cssHref}" rel="stylesheet" type="text/css"/>\n</head>`);
 }
 
-function buildTitlePageXhtml(meta: import('./types/epub.js').EpubMetadata): string {
-  const e = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:epub="http://www.idpf.org/2007/ops"
-      xml:lang="${meta.language}">
-<head>
-  <meta charset="utf-8"/>
-  <title>${e(meta.title)}</title>
-  <link href="main.css" rel="stylesheet" type="text/css"/>
-</head>
-<body>
-  <section epub:type="titlepage">
-    <div class="title-page">
-      <span class="ornament">&#10087;</span>
-      <p class="book-title">${e(meta.title)}</p>
-      <p class="book-author">${e(meta.author)}</p>
-      ${meta.publisher ? `<p class="book-publisher">${e(meta.publisher)}</p>` : ''}
-      ${meta.date ? `<p class="book-publisher">${e(meta.date)}</p>` : ''}
-    </div>
-  </section>
-</body>
-</html>`;
-}
-
-function buildCopyrightXhtml(meta: import('./types/epub.js').EpubMetadata): string {
-  const e = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const rights = meta.rights ?? 'All rights reserved. No part of this publication may be reproduced or transmitted in any form without prior written permission.';
-  return `<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:epub="http://www.idpf.org/2007/ops"
-      xml:lang="${meta.language}">
-<head>
-  <meta charset="utf-8"/>
-  <title>Copyright</title>
-  <link href="main.css" rel="stylesheet" type="text/css"/>
-</head>
-<body>
-  <section epub:type="copyright-page">
-    <div class="copyright-page">
-      <p><em>${e(meta.title)}</em></p>
-      <p>By ${e(meta.author)}</p>
-      <p>${e(rights)}</p>
-      ${meta.publisher ? `<p>Published by ${e(meta.publisher)}</p>` : ''}
-      ${meta.date ? `<p>${e(meta.date)}</p>` : ''}
-      <p>ID: ${e(meta.identifier)}</p>
-    </div>
-  </section>
-</body>
-</html>`;
-}
 
 function deriveOutputPath(inputPath: string): string {
   // For directories, output is alongside the dir with the dir name
