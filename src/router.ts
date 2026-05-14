@@ -106,8 +106,12 @@ async function buildEpubFromExtraction(
   // Glamour assets
   const assetsDir = path.join(__dirname, '..', 'assets');
   files.set(`${OPF_DIR}/main.css`, await fs.readFile(path.join(assetsDir, 'main.css')));
-  files.set(`${OPF_DIR}/fonts/Lora-Regular.ttf`, await fs.readFile(path.join(assetsDir, 'fonts', 'Lora-Regular.ttf')));
-  files.set(`${OPF_DIR}/fonts/Lora-Italic.ttf`, await fs.readFile(path.join(assetsDir, 'fonts', 'Lora-Italic.ttf')));
+  // Pack every font that exists in assets/fonts/ so the set stays in sync with main.css
+  const fontsDir = path.join(assetsDir, 'fonts');
+  const fontFiles = (await fs.readdir(fontsDir)).filter(f => /\.(ttf|otf|woff2?)$/i.test(f));
+  for (const font of fontFiles) {
+    files.set(`${OPF_DIR}/fonts/${font}`, await fs.readFile(path.join(fontsDir, font)));
+  }
 
   // eStorya Classics back-matter pages (optional)
   const editionYear = String(new Date().getFullYear());
@@ -139,7 +143,7 @@ async function buildEpubFromExtraction(
   const ncxXml = buildNcx(allPages, metadata.title, metadata.identifier, metadata.author);
   files.set(`${OPF_DIR}/toc.ncx`, Buffer.from(ncxXml, 'utf8'));
 
-  const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType, opts.eStoryaClassics);
+  const manifest = buildManifest(allPages, chapters, images, coverImageFilename, coverMediaType, opts.eStoryaClassics, fontFiles);
   const spine = buildSpine(allPages, extracted.isPictureBook ?? false);
 
   const epubPackage: EpubPackage = { metadata, manifest, spine, opfPath: OPF_PATH, opfDir: OPF_DIR };
@@ -186,16 +190,26 @@ function buildManifest(
   images: Map<string, Buffer>,
   coverImageFilename: string,
   coverMediaType: string,
-  eStoryaClassics = false
+  eStoryaClassics = false,
+  fontFiles: string[] = []
 ): ManifestItem[] {
   // Fixed assets — always present
   const items: ManifestItem[] = [
     { id: 'glamour-main-css', href: 'main.css', mediaType: 'text/css' },
-    { id: 'glamour-font-lora-regular', href: 'fonts/Lora-Regular.ttf', mediaType: 'application/font-sfnt' },
-    { id: 'glamour-font-lora-italic', href: 'fonts/Lora-Italic.ttf', mediaType: 'application/font-sfnt' },
     { id: 'ncx', href: 'toc.ncx', mediaType: 'application/x-dtbncx+xml' },
     { id: 'cover-image', href: `images/${coverImageFilename}`, mediaType: coverMediaType, properties: 'cover-image' },
   ];
+
+  // Fonts — dynamically built from whatever is in assets/fonts/
+  for (const font of fontFiles) {
+    const ext = path.extname(font).toLowerCase();
+    const mediaType = ext === '.otf' ? 'application/font-sfnt'
+      : ext === '.woff' ? 'application/font-woff'
+      : ext === '.woff2' ? 'font/woff2'
+      : 'application/font-sfnt'; // ttf default
+    const id = 'glamour-font-' + font.replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]/g, '-');
+    items.push({ id, href: `fonts/${font}`, mediaType });
+  }
 
   if (eStoryaClassics) {
     items.push({ id: 'estorya-classics-logo', href: 'images/estorya-classics.png', mediaType: 'image/png' });
