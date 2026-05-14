@@ -62,47 +62,7 @@ async function renderTemplate(name: string, ctx: Record<string, unknown>): Promi
   return Handlebars.compile(src)(ctx);
 }
 
-function e(s: string) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
 
-function buildTitlePageHtml(meta: typeof SAMPLE_META): string {
-  return `<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="${meta.language}">
-<head><meta charset="utf-8"/><title>${e(meta.title)}</title><link href="main.css" rel="stylesheet" type="text/css"/></head>
-<body>
-  <section epub:type="titlepage">
-    <div class="title-page">
-      <span class="ornament">&#10087;</span>
-      <p class="book-title">${e(meta.title)}</p>
-      <p class="book-author">${e(meta.author)}</p>
-      ${meta.publisher ? `<p class="book-publisher">${e(meta.publisher)}</p>` : ''}
-      ${meta.date ? `<p class="book-publisher">${e(meta.date)}</p>` : ''}
-    </div>
-  </section>
-</body></html>`;
-}
-
-function buildCopyrightHtml(meta: typeof SAMPLE_META): string {
-  const rights = meta.rights ?? 'All rights reserved.';
-  return `<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" xml:lang="${meta.language}">
-<head><meta charset="utf-8"/><title>Copyright</title><link href="main.css" rel="stylesheet" type="text/css"/></head>
-<body>
-  <section epub:type="copyright-page">
-    <div class="copyright-page">
-      <p><em>${e(meta.title)}</em></p>
-      <p>By ${e(meta.author)}</p>
-      <p>${e(rights)}</p>
-      ${meta.publisher ? `<p>Published by ${e(meta.publisher)}</p>` : ''}
-      ${meta.date ? `<p>${e(meta.date)}</p>` : ''}
-      <p>ID: ${e(meta.identifier)}</p>
-    </div>
-  </section>
-</body></html>`;
-}
 
 const ALL_PAGES: Page[] = [
   {
@@ -113,12 +73,28 @@ const ALL_PAGES: Page[] = [
   {
     id: 'title-page',
     label: 'Title Page',
-    render: () => buildTitlePageHtml(SAMPLE_META),
+    render: () => renderTemplate('title-page.xhtml.hbs', {
+      ...TEMPLATE_CTX,
+      title:      SAMPLE_META.title,
+      publisher:  SAMPLE_META.publisher ?? '',
+      date:       SAMPLE_META.date ?? '',
+      rights:     SAMPLE_META.rights ?? '',
+      identifier: SAMPLE_META.identifier,
+      cssPath:    'main.css',
+    }),
   },
   {
     id: 'copyright',
     label: 'Copyright',
-    render: () => buildCopyrightHtml(SAMPLE_META),
+    render: () => renderTemplate('copyright.xhtml.hbs', {
+      ...TEMPLATE_CTX,
+      title:      SAMPLE_META.title,
+      publisher:  SAMPLE_META.publisher ?? '',
+      date:       SAMPLE_META.date ?? '',
+      rights:     SAMPLE_META.rights ?? '',
+      identifier: SAMPLE_META.identifier,
+      cssPath:    'main.css',
+    }),
   },
   {
     id: 'toc-nav',

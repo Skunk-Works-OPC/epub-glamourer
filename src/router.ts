@@ -79,8 +79,20 @@ async function buildEpubFromExtraction(
     Buffer.from(buildCoverXhtml(`images/${coverImageFilename}`, metadata.title, metadata.language), 'utf8')
   );
 
-  files.set(`${OPF_DIR}/title-page.xhtml`, Buffer.from(buildTitlePageXhtml(metadata), 'utf8'));
-  files.set(`${OPF_DIR}/copyright.xhtml`, Buffer.from(buildCopyrightXhtml(metadata), 'utf8'));
+  const pageCtx = {
+    title:     metadata.title,
+    author:    metadata.author,
+    language:  metadata.language,
+    publisher: metadata.publisher ?? '',
+    date:      metadata.date ?? '',
+    rights:    metadata.rights ?? '',
+    identifier: metadata.identifier,
+    cssPath:   'main.css',
+  };
+  files.set(`${OPF_DIR}/title-page.xhtml`,
+    Buffer.from(await renderTemplate('title-page.xhtml.hbs', pageCtx), 'utf8'));
+  files.set(`${OPF_DIR}/copyright.xhtml`,
+    Buffer.from(await renderTemplate('copyright.xhtml.hbs', pageCtx), 'utf8'));
 
   for (const chapter of chapters) {
     const withCss = injectLink(chapter.xhtmlContent, 'main.css');
@@ -226,59 +238,6 @@ function injectLink(xhtml: string, cssHref: string): string {
   return xhtml.replace('</head>', `  <link href="${cssHref}" rel="stylesheet" type="text/css"/>\n</head>`);
 }
 
-function buildTitlePageXhtml(meta: import('./types/epub.js').EpubMetadata): string {
-  const e = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  return `<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:epub="http://www.idpf.org/2007/ops"
-      xml:lang="${meta.language}">
-<head>
-  <meta charset="utf-8"/>
-  <title>${e(meta.title)}</title>
-  <link href="main.css" rel="stylesheet" type="text/css"/>
-</head>
-<body>
-  <section epub:type="titlepage">
-    <div class="title-page">
-      <span class="ornament">&#10087;</span>
-      <p class="book-title">${e(meta.title)}</p>
-      <p class="book-author">${e(meta.author)}</p>
-      ${meta.publisher ? `<p class="book-publisher">${e(meta.publisher)}</p>` : ''}
-      ${meta.date ? `<p class="book-publisher">${e(meta.date)}</p>` : ''}
-    </div>
-  </section>
-</body>
-</html>`;
-}
-
-function buildCopyrightXhtml(meta: import('./types/epub.js').EpubMetadata): string {
-  const e = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const rights = meta.rights ?? 'All rights reserved. No part of this publication may be reproduced or transmitted in any form without prior written permission.';
-  return `<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:epub="http://www.idpf.org/2007/ops"
-      xml:lang="${meta.language}">
-<head>
-  <meta charset="utf-8"/>
-  <title>Copyright</title>
-  <link href="main.css" rel="stylesheet" type="text/css"/>
-</head>
-<body>
-  <section epub:type="copyright-page">
-    <div class="copyright-page">
-      <p><em>${e(meta.title)}</em></p>
-      <p>By ${e(meta.author)}</p>
-      <p>${e(rights)}</p>
-      ${meta.publisher ? `<p>Published by ${e(meta.publisher)}</p>` : ''}
-      ${meta.date ? `<p>${e(meta.date)}</p>` : ''}
-      <p>ID: ${e(meta.identifier)}</p>
-    </div>
-  </section>
-</body>
-</html>`;
-}
 
 function deriveOutputPath(inputPath: string): string {
   // For directories, output is alongside the dir with the dir name
