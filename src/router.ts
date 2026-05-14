@@ -121,8 +121,8 @@ async function buildEpubFromExtraction(
       Buffer.from(await renderTemplate('estorya-classics.xhtml.hbs', templateCtx), 'utf8'));
     files.set(`${OPF_DIR}/rights-attribution.xhtml`,
       Buffer.from(await renderTemplate('rights-attribution.xhtml.hbs', templateCtx), 'utf8'));
-    files.set(`${OPF_DIR}/images/estorya-classics.png`,
-      await fs.readFile(path.join(assetsDir, 'images', 'estorya-classics.png')));
+    files.set(`${OPF_DIR}/images/estorya-classics.svg`,
+      await fs.readFile(path.join(assetsDir, 'images', 'estorya-classics.svg')));
   }
 
   const allPages = [
@@ -212,7 +212,7 @@ function buildManifest(
   }
 
   if (eStoryaClassics) {
-    items.push({ id: 'estorya-classics-logo', href: 'images/estorya-classics.png', mediaType: 'image/png' });
+    items.push({ id: 'estorya-classics-logo', href: 'images/estorya-classics.svg', mediaType: 'image/svg+xml' });
   }
 
   // All XHTML pages — driven by allPages so any future additions are automatic
