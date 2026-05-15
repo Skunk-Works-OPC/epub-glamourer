@@ -27,7 +27,10 @@ export function parseHtmlContent(raw: string, basename: string): ExtractResult {
   // ── Picture book detection ───────────────────────────────────────
   // A picture book has few/no chapter headings but many illustrations.
   const imgCount = $('body img').length;
-  const isPictureBook = chapterH2s.length < 2 && h1s.length <= 1 && imgCount >= 5;
+  const bodyParagraphCount = $('body p').length;
+  // Don't misclassify pre-split chapter files (single heading + many paragraphs + illustrations)
+  // as picture books. A real picture book has few/no paragraphs.
+  const isPictureBook = chapterH2s.length < 2 && h1s.length <= 1 && imgCount >= 5 && bodyParagraphCount < 10;
 
   if (isPictureBook) {
     stripPictureBookPreamble($);
