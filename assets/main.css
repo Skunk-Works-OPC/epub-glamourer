@@ -29,6 +29,16 @@
 
 @font-face {
   font-family: 'Newsreader';
+<<<<<<< Updated upstream
+=======
+  font-style: normal;
+  font-weight: 400;
+  src: url('fonts/Newsreader-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Newsreader';
+>>>>>>> Stashed changes
   font-style: italic;
   font-weight: 400;
   src: url('fonts/Newsreader-Italic.ttf') format('truetype');
@@ -48,7 +58,10 @@
   src: url('fonts/JetBrainsMono-Regular.ttf') format('truetype');
 }
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 /* ── Design tokens ──────────────────────────────────────────────────── */
 
 
